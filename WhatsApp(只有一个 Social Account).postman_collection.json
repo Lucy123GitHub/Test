@@ -1,0 +1,485 @@
+{
+	"info": {
+		"_postman_id": "38afb634-3565-414c-9f32-1e060bf64e81",
+		"name": "WhatsApp(只有一个 Social Account)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Send Messages to Social Reps",
+			"item": [
+				{
+					"name": "Verify Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"检测响应 \", function () {",
+									"    var jsonData = pm.response.json();",
+									"    console.log('ddd ' + jsonData);",
+									"    pm.expect(jsonData).to.eql(123452345);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": []
+						},
+						"url": {
+							"raw": "https://{{url}}/services/apexrest/CharketApp/webhook?hub.mode=subscribe&hub.challenge=123452345&hub.verify_token=FakeToken",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"services",
+								"apexrest",
+								"CharketApp",
+								"webhook"
+							],
+							"query": [
+								{
+									"key": "hub.mode",
+									"value": "subscribe"
+								},
+								{
+									"key": "hub.challenge",
+									"value": "123452345"
+								},
+								{
+									"key": "hub.verify_token",
+									"value": "FakeToken"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Texts",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var timestamp = Math.round(new Date());",
+									"pm.globals.set(\"timestamp\", timestamp);",
+									"var msgId = Number(Math.random().toString().substr(3,5) + Date.now()).toString(36);",
+									"pm.globals.set(\"MessageId\", msgId);",
+									"",
+									"var appSecret = 'FakeAppSecret';",
+									"",
+									"//var test = JSON.parse(JSON.stringify(request.data).replace(/ /g, ''));",
+									"var test = JSON.parse(request.data);",
+									"",
+									"test.entry[0].changes[0].value.contacts[0].profile.name = data.ContactName;",
+									"test.entry[0].changes[0].value.contacts[0].wa_id = String(data.CustomerPhoneNumber);",
+									"test.entry[0].changes[0].value.messages[0].from = String(data.CustomerPhoneNumber);",
+									"test.entry[0].changes[0].value.messages[0].id = msgId;",
+									"test.entry[0].changes[0].value.messages[0].timestamp = String(timestamp);",
+									"test.entry[0].changes[0].value.messages[0].text.body = data.Content;",
+									"test = JSON.stringify(test);",
+									"//var params = request.data;",
+									"console.log('test ' + test);",
+									"",
+									"var signHmacSHA1=CryptoJS.HmacSHA1(test, appSecret).toString(CryptoJS.enc.Hex);",
+									"console.log('aaa ' + signHmacSHA1);",
+									"pm.globals.set(\"signature\", \"sha1=\" + signHmacSHA1);",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Hub-Signature",
+								"value": "{{signature}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"object\":\"whatsapp_business_account\",\"entry\":[{\"id\":\"TestWhatsApp\",\"changes\":[{\"value\":{\"messaging_product\":\"whatsapp\",\"metadata\":{\"display_phone_number\":\"1234567890\",\"phone_number_id\":\"1234567890\"},\"contacts\":[{\"profile\":{\"name\":\"{{ContactName}}\"},\"wa_id\":\"{{CustomerPhoneNumber}}\"}],\"messages\":[{\"from\":\"{{CustomerPhoneNumber}}\",\"id\":\"{{MessageId}}\",\"timestamp\":\"{{timestamp}}\",\"text\":{\"body\":\"{{Content}}\"},\"type\":\"text\"}]},\"field\":\"messages\"}]}]}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{url}}/services/apexrest/CharketApp/webhook/WhatsApp",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"services",
+								"apexrest",
+								"CharketApp",
+								"webhook",
+								"WhatsApp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "多个请求发送多条数据",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var timestamp = Math.round(new Date() / 1000);",
+									"pm.globals.set(\"timestamp\", timestamp);",
+									"var msgId = Number(Math.random().toString().substr(3,5) + Date.now()).toString(36);",
+									"pm.globals.set(\"MessageId\", msgId);",
+									"",
+									"var msgId2 = Number(Math.random().toString().substr(3,5) + Date.now()).toString(36);",
+									"pm.globals.set(\"MessageId2\", msgId2);",
+									"var appSecret = 'FakeAppSecret';",
+									"",
+									"//var test = JSON.parse(JSON.stringify(request.data).replace(/ /g, ''));",
+									"var test = JSON.parse(request.data);",
+									"",
+									"test.entry[0].changes[0].value.contacts[0].profile.name = data.ContactName;",
+									"test.entry[0].changes[0].value.contacts[1].profile.name = data.ContactName2;",
+									"",
+									"test.entry[0].changes[0].value.contacts[0].wa_id = String(data.CustomerPhoneNumber);",
+									"test.entry[0].changes[0].value.contacts[1].wa_id = String(data.CustomerPhoneNumber2);",
+									"test.entry[0].changes[0].value.messages[0].from = String(data.CustomerPhoneNumber);",
+									"test.entry[0].changes[0].value.messages[1].from = String(data.CustomerPhoneNumber2);",
+									"test.entry[0].changes[0].value.messages[0].id = msgId;",
+									"test.entry[0].changes[0].value.messages[1].id = msgId2;",
+									"test.entry[0].changes[0].value.messages[0].timestamp = String(timestamp);",
+									"test.entry[0].changes[0].value.messages[1].timestamp = String(timestamp);",
+									"test.entry[0].changes[0].value.messages[0].text.body = data.Content;",
+									"test.entry[0].changes[0].value.messages[1].text.body = data.Content2;",
+									"test = JSON.stringify(test);",
+									"//var params = request.data;",
+									"console.log('test ' + test);",
+									"",
+									"var signHmacSHA1=CryptoJS.HmacSHA1(test, appSecret).toString(CryptoJS.enc.Hex);",
+									"console.log('aaa ' + signHmacSHA1);",
+									"pm.globals.set(\"signature\", \"sha1=\" + signHmacSHA1);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Hub-Signature",
+								"value": "{{signature}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"object\":\"whatsapp_business_account\",\"entry\":[{\"id\":\"TestWhatsApp\",\"changes\":[{\"value\":{\"messaging_product\":\"whatsapp\",\"metadata\":{\"display_phone_number\":\"1234567890\",\"phone_number_id\":\"1234567890\"},\"contacts\":[{\"profile\":{\"name\":\"{{ContactName}}\"},\"wa_id\":\"{{CustomerPhoneNumber}}\"},{\"profile\":{\"name\":\"{{ContactName2}}\"},\"wa_id\":\"{{CustomerPhoneNumber2}}\"}],\"messages\":[{\"from\":\"{{CustomerPhoneNumber}}\",\"id\":\"{{MessageId}}\",\"timestamp\":\"{{timestamp}}\",\"text\":{\"body\":\"{{Content}}\"},\"type\":\"text\"},{\"from\":\"{{CustomerPhoneNumber2}}\",\"id\":\"{{MessageId2}}\",\"timestamp\":\"{{timestamp}}\",\"text\":{\"body\":\"{{Content2}}\"},\"type\":\"text\"}]},\"field\":\"messages\"}]}]}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{url}}/services/apexrest/CharketApp/webhook/WhatsApp",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"services",
+								"apexrest",
+								"CharketApp",
+								"webhook",
+								"WhatsApp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "多个请求发来一条重复的消息",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var timestamp = Math.round(new Date() / 1000);",
+									"pm.globals.set(\"timestamp\", timestamp);",
+									"var msgId = Number(Math.random().toString().substr(3,5) + Date.now()).toString(36);",
+									"",
+									"pm.globals.set(\"MessageId\", msgId);",
+									"",
+									"var appSecret = 'FakeAppSecret';",
+									"",
+									"//var test = JSON.parse(JSON.stringify(request.data).replace(/ /g, ''));",
+									"var test = JSON.parse(request.data);",
+									"",
+									"test.entry[0].changes[0].value.contacts[0].profile.name = data.ContactName;",
+									"test.entry[0].changes[0].value.contacts[0].wa_id = String(data.CustomerPhoneNumber);",
+									"test.entry[0].changes[0].value.messages[0].from = String(data.CustomerPhoneNumber);",
+									"test.entry[0].changes[0].value.messages[0].id = String(data.MessageId);",
+									"//test.entry[0].changes[0].value.messages[0].timestamp = String(timestamp);",
+									"test.entry[0].changes[0].value.messages[0].text.body = String(data.Content);",
+									"test = JSON.stringify(test);",
+									"//var params = request.data;",
+									"console.log('test ' + test);",
+									"",
+									"var signHmacSHA1=CryptoJS.HmacSHA1(test, appSecret).toString(CryptoJS.enc.Hex);",
+									"console.log('aaa ' + signHmacSHA1);",
+									"pm.globals.set(\"signature\", \"sha1=\" + signHmacSHA1);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Hub-Signature",
+								"value": "{{signature}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"object\":\"whatsapp_business_account\",\"entry\":[{\"id\":\"TestWhatsApp\",\"changes\":[{\"value\":{\"messaging_product\":\"whatsapp\",\"metadata\":{\"display_phone_number\":\"1234567890\",\"phone_number_id\":\"1234567890\"},\"contacts\":[{\"profile\":{\"name\":\"{{ContactName}}\"},\"wa_id\":\"{{CustomerPhoneNumber}}\"}],\"messages\":[{\"from\":\"{{CustomerPhoneNumber}}\",\"id\":\"{{MessageId}}\",\"timestamp\":\"1648112568\",\"text\":{\"body\":\"{{Content}}\"},\"type\":\"text\"}]},\"field\":\"messages\"}]}]}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{url}}/services/apexrest/CharketApp/webhook/WhatsApp",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"services",
+								"apexrest",
+								"CharketApp",
+								"webhook",
+								"WhatsApp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Media Messages",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"响应状态码为200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"object\": \"whatsapp_business_account\",\n  \"entry\": [{\n      \"id\": \"{{accountId}}\",\n      \"changes\": [{\n          \"value\": {\n              \"messaging_product\": \"whatsapp\",\n              \"metadata\": {\n                  \"display_phone_number\": {{SocialRepPhoneNumber}},\n                  \"phone_number_id\": {{SocialRepPhoneNumber}}\n              },\n              \"contacts\": [{\n                  \"profile\": {\n                    \"name\": \"{{ContactName}}\"\n                  },\n                  \"wa_id\": {{CustomerPhoneNumberId}}\n                }],\n              \"messages\": [{\n                  \"from\": {{CustomerPhoneNumber}},\n                  \"id\": \"{{MessageId}}\",\n                  \"timestamp\": \"{{TIMESTAMP}}\",\n                  \"type\": \"image\",\n                  \"image\": {\n                    \"caption\": \"{{Caption}}\",\n                    \"mime_type\": \"image/jpeg\",\n                    \"sha256\": \"{{Sha256}}\",\n                    \"id\": \"{{MediaId}}\"\n                  }\n                }]\n          },\n          \"field\": \"messages\"\n        }]\n    }]\n}"
+						},
+						"url": {
+							"raw": "https://test2.com",
+							"protocol": "https",
+							"host": [
+								"test2",
+								"com"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Unknown Messages",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"响应状态码为200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"object\": \"whatsapp_business_account\",\n  \"entry\": [{\n      \"id\": \"{{accountId}}\",\n      \"changes\": [{\n          \"value\": {\n              \"messaging_product\": \"whatsapp\",\n              \"metadata\": { \n                \"display_phone_number\": {{SocialRepPhoneNumber}}, \n                \"phone_number_id\": {{SocialRepPhoneNumber}}\n              },\n              \"contacts\": [{\n                  \"profile\": { \n                    \"name\": \"{{ContactName}}\" \n                  }, \n                  \"wa_id\": {{CustomerPhoneNumberId}}\n                }],\n              \"messages\": [{\n                  \"from\": {{CustomerPhoneNumber}},\n                  \"id\": \"{{MessageId}}\", \n                  \"timestamp\": \"{{TIMESTAMP}}\",\n                  \"errors\": [ \n                    { \n                      \"code\": 131051, \n                      \"details\": \"Message type is not currently supported\",\n                      \"title\": \"Unsupported message type\"\n                    }],\n                   \"type\": \"unknown\"\n                   }]\n            }\n            \"field\": \"messages\"\n        }],\n    }]\n}"
+						},
+						"url": {
+							"raw": "https://test3.com",
+							"protocol": "https",
+							"host": [
+								"test3",
+								"com"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Location Messages",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"响应状态码为200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"object\": \"whatsapp_business_account\",\n  \"entry\": [{\n      \"id\": \"WHATSAPP_BUSINESS_ACCOUNT_ID\",\n      \"changes\": [{\n          \"value\": {\n              \"messaging_product\": \"whatsapp\",\n              \"metadata\": {\n                  \"display_phone_number\": {{SocialRepPhoneNumber}},\n                  \"phone_number_id\": {{SocialRepPhoneNumber}}\n              },\n              \"contacts\": [{\n                  \"profile\": {\n                    \"name\": \"{{ContactName}}\"\n                  },\n                  \"wa_id\": {{CustomerPhoneNumberId}}\n                }],\n              \"messages\": [{\n                  \"from\": {{CustomerPhoneNumber}},\n                  \"id\": \"{{MessageId}}\",\n                  \"timestamp\": \"{{TIMESTAMP}}\",\n                 \"location\": {\n                    \"latitude\": LOCATION_LATITUDE,\n                    \"longitude\": LOCATION_LONGITUDE,\n                    \"name\": LOCATION_NAME,\n                    \"address\": LOCATION_ADDRESS,\n                 }\n                }]\n          },\n          \"field\": \"messages\"\n        }]\n    }]\n}"
+						},
+						"url": {
+							"raw": "https://test4.com",
+							"protocol": "https",
+							"host": [
+								"test4",
+								"com"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Contacts Messages",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Received Callback from a Quick Reply Button",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "noauth"
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"pm.globals.set(\"timestamp\", Math.round(new Date() / 1000));",
+					"",
+					"var messageId=\"\";",
+					"for(var i = 0;i < 6;i++)",
+					"{",
+					"    messageId+=Math.floor(Math.random()*10);",
+					"}",
+					"pm.globals.set(\"MessageId\", messageId);",
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"pm.test(\"Status code is 200\", function () {",
+					"    pm.response.to.have.status(200);",
+					"});",
+					""
+				]
+			}
+		}
+	]
+}
